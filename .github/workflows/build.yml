@@ -59,10 +59,10 @@ jobs:
           echo "Библиотека Preferences установлена"
 
       # Шаг 9: Установка библиотеки SPI
-      - name: Установка библиотеки SPI
-        run: |
-          arduino-cli lib install SPI
-          echo "Библиотека SPI установлена"
+      #- name: Установка библиотеки SPI
+        #run: |
+          #arduino-cli lib install SPI
+          #echo "Библиотека SPI установлена"
 
       # Шаг 10: Компиляция проекта
       - name: Компиляция прошивки
