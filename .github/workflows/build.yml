@@ -1,16 +1,16 @@
-name: Сборка проекта ESP32RET
+name: Сборка и выпуск проекта ESP32RET
 
-# Указываем, когда запускать процесс: при push в ветку main или при ручном запуске
+# Указываем, когда запускать процесс: при push в любую ветку или при ручном запуске
 on:
   push:
     branches:
-      - main
+      - '*' # Запуск при push в любую ветку
   workflow_dispatch: # Позволяет запускать вручную из вкладки Actions
 
-# Определяем задачу (job) для сборки
+# Определяем задачу (job) для сборки и выпуска
 jobs:
-  build:
-    name: Компиляция прошивки для ESP32
+  build-and-release:
+    name: Компиляция и создание релиза для ESP32
     runs-on: ubuntu-latest # Используем последнюю версию Ubuntu
 
     steps:
@@ -46,7 +46,13 @@ jobs:
           git clone https://github.com/collin80/can_common.git ~/Arduino/libraries/can_common
           echo "Библиотека can_common установлена"
 
-      # Шаг 7: Компиляция проекта
+      # Шаг 7: Установка библиотеки FastLED
+      - name: Установка библиотеки FastLED
+        run: |
+          arduino-cli lib install FastLED
+          echo "Библиотека FastLED установлена"
+
+      # Шаг 8: Компиляция проекта
       - name: Компиляция прошивки
         run: |
           arduino-cli compile \
@@ -54,9 +60,19 @@ jobs:
             --build-path ./build \
             ./ESP32RET.ino
 
-      # Шаг 8: Сохранение скомпилированных файлов как артефакты
-      - name: Загрузка артефактов
-        uses: actions/upload-artifact@v4
+      # Шаг 9: Получение версии из commit hash
+      - name: Определение версии релиза
+        id: version
+        run: |
+          echo "RELEASE_VERSION=build-${{ github.sha }}" >> $GITHUB_ENV
+
+      # Шаг 10: Создание релиза и загрузка прошивки
+      - name: Создание релиза с прошивкой
+        uses: softprops/action-gh-release@v2
         with:
-          name: ESP32RET-firmware
-          path: ./build/
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: "Сборка ${{ env.RELEASE_VERSION }}"
+          body: "Автоматическая сборка прошивки ESP32RET от ${{ github.event.head_commit.message }}"
+          files: ./build/ESP32RET.ino.bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
