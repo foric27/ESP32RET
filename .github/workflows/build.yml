@@ -52,7 +52,19 @@ jobs:
           arduino-cli lib install FastLED
           echo "Библиотека FastLED установлена"
 
-      # Шаг 8: Компиляция проекта
+      # Шаг 8: Установка библиотеки Preferences
+      - name: Установка библиотеки Preferences
+        run: |
+          arduino-cli lib install Preferences
+          echo "Библиотека Preferences установлена"
+
+      # Шаг 9: Установка библиотеки SPI
+      - name: Установка библиотеки SPI
+        run: |
+          arduino-cli lib install SPI
+          echo "Библиотека SPI установлена"
+
+      # Шаг 10: Компиляция проекта
       - name: Компиляция прошивки
         run: |
           arduino-cli compile \
@@ -60,13 +72,13 @@ jobs:
             --build-path ./build \
             ./ESP32RET.ino
 
-      # Шаг 9: Получение версии из commit hash
+      # Шаг 11: Получение версии из commit hash
       - name: Определение версии релиза
         id: version
         run: |
           echo "RELEASE_VERSION=build-${{ github.sha }}" >> $GITHUB_ENV
 
-      # Шаг 10: Создание релиза и загрузка прошивки
+      # Шаг 12: Создание релиза и загрузка прошивки
       - name: Создание релиза с прошивкой
         uses: softprops/action-gh-release@v2
         with:
