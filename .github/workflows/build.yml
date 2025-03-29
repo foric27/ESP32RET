@@ -1,0 +1,52 @@
+name: Сборка проекта ESP32RET
+
+# Указываем, когда запускать процесс: при push в ветку main или при ручном запуске
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Позволяет запускать вручную из вкладки Actions
+
+# Определяем задачу (job) для сборки
+jobs:
+  build:
+    name: Компиляция прошивки для ESP32
+    runs-on: ubuntu-latest # Используем последнюю версию Ubuntu
+
+    steps:
+      # Шаг 1: Клонируем репозиторий
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+
+      # Шаг 2: Установка Arduino-CLI
+      - name: Установка Arduino-CLI
+        uses: arduino/setup-arduino-cli@v1
+
+      # Шаг 3: Установка ядра ESP32
+      - name: Установка ядра ESP32
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+
+      # Шаг 4: Установка необходимых библиотек
+      - name: Установка библиотек
+        run: |
+          # Указываем путь для библиотек, если они есть в проекте
+          # Если библиотеки внешние, их нужно указать явно, например:
+          # arduino-cli lib install "SomeLibrary"
+          echo "Библиотеки пока не требуются, используются встроенные"
+
+      # Шаг 5: Компиляция проекта
+      - name: Компиляция прошивки
+        run: |
+          arduino-cli compile \
+            --fqbn esp32:esp32:esp32:PartitionScheme=min_spiffs \
+            --build-path ./build \
+            ./ESP32RET.ino
+
+      # Шаг 6: Сохранение скомпилированных файлов как артефакты
+      - name: Загрузка артефактов
+        uses: actions/upload-artifact@v4
+        with:
+          name: ESP32RET-firmware
+          path: ./build/
